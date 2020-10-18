@@ -2,6 +2,7 @@ package com.projemanag.firebase
 
 import android.app.Activity
 import android.util.Log
+import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -48,7 +49,7 @@ class FirestoreClass {
     /**
      * A function to SignIn using firebase and get the user details from Firestore Database.
      */
-    fun signInUser(activity: Activity) {
+    fun loadUserData(activity: Activity) {
 
         // Here we pass the collection name from which we wants the data.
         mFireStore.collection(Constants.USERS)
@@ -57,10 +58,10 @@ class FirestoreClass {
             .get()
             .addOnSuccessListener { document ->
                 Log.e(activity.javaClass.simpleName, document.toString())
+
                 // Here we have received the document snapshot which is converted into the User Data model object.
                 val loggedInUser = document.toObject(User::class.java)!!
-                // TODO(Step 3: Modify the parameter and check the instance of activity and send the success result to it.)
-                // START
+
                 // Here call a function of base activity for transferring the result to it.
                 when (activity) {
                     is SignInActivity -> {
@@ -73,11 +74,8 @@ class FirestoreClass {
                         activity.setUserDataInUI(loggedInUser)
                     }
                 }
-                // END
             }
             .addOnFailureListener { e ->
-                // TODO(Step 4: Hide the progress dialog in failure function based on instance of activity.)
-                // START
                 // Here call a function of base activity for transferring the result to it.
                 when (activity) {
                     is SignInActivity -> {
@@ -90,7 +88,6 @@ class FirestoreClass {
                         activity.hideProgressDialog()
                     }
                 }
-                // END
                 Log.e(
                     activity.javaClass.simpleName,
                     "Error while getting loggedIn user details",
@@ -98,6 +95,35 @@ class FirestoreClass {
                 )
             }
     }
+
+    // TODO (Step 5: Create a function to update the user profile data into the database.)
+    // START
+    /**
+     * A function to update the user profile data into the database.
+     */
+    fun updateUserProfileData(activity: MyProfileActivity, userHashMap: HashMap<String, Any>) {
+        mFireStore.collection(Constants.USERS) // Collection Name
+            .document(getCurrentUserID()) // Document ID
+            .update(userHashMap) // A hashmap of fields which are to be updated.
+            .addOnSuccessListener {
+                // Profile data is updated successfully.
+                Log.e(activity.javaClass.simpleName, "Profile Data updated successfully!")
+
+                Toast.makeText(activity, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+
+                // Notify the success result.
+                activity.profileUpdateSuccess()
+            }
+            .addOnFailureListener { e ->
+                activity.hideProgressDialog()
+                Log.e(
+                    activity.javaClass.simpleName,
+                    "Error while creating a board.",
+                    e
+                )
+            }
+    }
+    // END
 
     /**
      * A function for getting the user id of current logged user.
